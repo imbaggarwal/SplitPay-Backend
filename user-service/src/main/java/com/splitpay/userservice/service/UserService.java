@@ -11,13 +11,25 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final FeatureFlagService featureFlagService;
 
-    public UserService(UserRepository userRepository){
+    public UserService(UserRepository userRepository, FeatureFlagService featureFlagService){
         this.userRepository = userRepository;
+        this.featureFlagService = featureFlagService;
     }
 
     // Create a User
     public User createUser(User user){
+        if(featureFlagService.isFeatureEnabled("strict-email-validation")){
+            System.out.println("Feature Flag is ON: Checking email domain...");
+
+            if(!user.getEmail().endsWith("@splitpay.com")){
+                throw new IllegalArgumentException("Only @splitpay.com emails are allowed!");
+            }
+        }
+        else{
+            System.out.println("Feature Flag is OFF: Allowing any email.");
+        }
         return userRepository.save(user);
     }
 
