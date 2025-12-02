@@ -1,0 +1,47 @@
+version: '3.8'
+services:
+  # 1. Oracle Database
+  splitpay-db:
+    image: gvenzl/oracle-xe
+    container_name: splitpay-db
+    ports:
+      - "1521:1521"
+    environment:
+      ORACLE_PASSWORD: splitpay123
+    networks:
+      - splitpay-net
+
+  # 2. Redis Cache
+  splitpay-redis:
+    image: redis:alpine
+    container_name: splitpay-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - splitpay-net
+
+  # 3. Prometheus (The Recorder)
+  prometheus:
+    image: prom/prometheus
+    container_name: splitpay-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - splitpay-net
+
+  # 4. Grafana (The Dashboard)
+  grafana:
+    image: grafana/grafana
+    container_name: splitpay-grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - splitpay-net
+
+networks:
+  splitpay-net:
+    driver: bridge
