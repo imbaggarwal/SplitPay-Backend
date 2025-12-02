@@ -1,5 +1,6 @@
 package com.splitpay.userservice.service;
 
+import com.splitpay.userservice.kafka.KafkaProducer;
 import com.splitpay.userservice.model.User;
 import com.splitpay.userservice.repository.UserRepository;
 import org.springframework.cache.annotation.Cacheable;
@@ -12,10 +13,12 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final FeatureFlagService featureFlagService;
+    private final KafkaProducer kafkaProducer;
 
-    public UserService(UserRepository userRepository, FeatureFlagService featureFlagService){
+    public UserService(UserRepository userRepository, FeatureFlagService featureFlagService, KafkaProducer kafkaProducer){
         this.userRepository = userRepository;
         this.featureFlagService = featureFlagService;
+        this.kafkaProducer = kafkaProducer;
     }
 
     // Create a User
@@ -30,7 +33,11 @@ public class UserService {
         else{
             System.out.println("Feature Flag is OFF: Allowing any email.");
         }
-        return userRepository.save(user);
+        User saveduser = userRepository.save(user);
+
+        kafkaProducer.sendMessage("user-events", "User Created with ID: " + saveduser.getId());
+
+        return saveduser;
     }
 
     // Get all Users
