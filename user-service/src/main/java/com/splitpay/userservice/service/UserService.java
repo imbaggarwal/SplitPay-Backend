@@ -2,6 +2,7 @@ package com.splitpay.userservice.service;
 
 import com.splitpay.userservice.model.User;
 import com.splitpay.userservice.repository.UserRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,7 +27,9 @@ public class UserService {
     }
 
     // Get User by ID
+    @Cacheable(value = "users", key = "#id")
     public User getUserByID(Long id){
+        System.out.println("fetching user from database for id: " + id);
         return userRepository.findById(id).orElse(null);
     }
 }
