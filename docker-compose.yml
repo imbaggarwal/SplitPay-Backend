@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   # 1. Oracle Database
   splitpay-db:
@@ -71,6 +70,42 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - splitpay-net
+
+  # 7. User Service App
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    restart: on-failure:5
+    ports:
+      - "8080:8080"
+    environment:
+      # Override localhost with container names
+      SPRING_DATASOURCE_URL: jdbc:oracle:thin:@//splitpay-db:1521/XEPDB1
+      SPRING_DATA_REDIS_HOST: splitpay-redis
+      # Connect to Kafka internally (Note port 29092!)
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: splitpay-kafka:29092
+    depends_on:
+      - splitpay-db
+      - kafka
+      - splitpay-redis
+    networks:
+      - splitpay-net
+
+  # 8. Expense Service App
+  expense-service:
+    build: expense-service
+    container_name: expense-service
+    restart: on-failure:5
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:oracle:thin:@//splitpay-db:1521/XEPDB1
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: splitpay-kafka:29092
+    depends_on:
+      - splitpay-db
+      - kafka
     networks:
       - splitpay-net
 
