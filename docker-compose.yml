@@ -1,7 +1,8 @@
 services:
   # 1. Oracle Database
   splitpay-db:
-    image: gvenzl/oracle-xe
+    image: gvenzl/oracle-xe:18-slim
+    ipc: host
     container_name: splitpay-db
     ports:
       - "1521:1521"
